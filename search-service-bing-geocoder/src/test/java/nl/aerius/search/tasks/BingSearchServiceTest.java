@@ -16,39 +16,26 @@
  */
 package nl.aerius.search.tasks;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-
-import io.reactivex.rxjava3.core.Single;
 
 import nl.aerius.search.domain.SearchTaskResult;
 
-@SpringBootTest
+/**
+ * Unit test for the no-api-key path, which can run without a remote Bing service (unlike the integration test in
+ * {@link BingSearchServiceIT}, which is skipped when no api key is configured).
+ */
 class BingSearchServiceTest {
-  @Autowired BingSearchService delegator;
-
-  @Value("${nl.aerius.bing.apiKey:#{null}}") private String apiKey;
 
   @Test
-  void testWorksAtAll() {
-    // Don't do anything if there is no apiKey
-    assumeFalse(apiKey == null, "No Bing API key available, skipping test");
+  void testReturnEmptyResultWithoutApiKey() {
+    final BingSearchService service = new BingSearchService();
 
-    final Single<SearchTaskResult> result = delegator.retrieveSearchResults("edin");
+    final SearchTaskResult result = service.retrieveSearchResults("anything").blockingGet();
 
-    final SearchTaskResult suggestions = result.blockingGet();
-
-    assertEquals(5, suggestions.getSuggestions().size(), "Expected number of results for 'edin' (should include 'edinburgh')");
-
-    final Single<SearchTaskResult> resultYork = delegator.retrieveSearchResults("york");
-
-    final SearchTaskResult suggestionsYork = resultYork.blockingGet();
-
-    assertEquals(4, suggestionsYork.getSuggestions().size(), "Expected number of results for 'edin' (should include 'edinburgh')");
+    assertNotNull(result, "A result should always be returned");
+    assertTrue(result.getSuggestions().isEmpty(), "Without an api key there should be no suggestions");
   }
 }
