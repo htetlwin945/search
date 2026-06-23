@@ -52,11 +52,11 @@ class Natura2000WfsInterpreterTest {
 
     final Nature2000Area lepelaarplassen = mappedAreas.get("lepelaarplassen");
     assertArea(lepelaarplassen, "L_ff79e30b-f9d5-406b-94c0-7b3222ec4204", "Lepelaarplassen", "lepelaarplassen", "POLYGON ((",
-        "POINT (142831.32257141997 491155.1833244898)", 3564691);
+        "POINT (142831.323 491155.183)", 3564691);
 
     final Nature2000Area binnenveld = mappedAreas.get("binnenveld");
     assertArea(binnenveld, "L_7b89a66e-7f44-40f0-9d98-c7245f2c04c1", "Binnenveld", "binnenveld", "MULTIPOLYGON ((",
-        "POINT (168590.92165693894 446854.7658209189)", 1114151);
+        "POINT (168590.922 446854.766)", 1114151);
   }
 
   private void assertArea(final Nature2000Area naturea2000Area, final String id, final String name, final String normalizedName,

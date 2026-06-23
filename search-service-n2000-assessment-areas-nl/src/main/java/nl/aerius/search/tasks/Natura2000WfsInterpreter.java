@@ -66,6 +66,8 @@ import kong.unirest.core.Unirest;
 public class Natura2000WfsInterpreter {
   private static final double DOUGLAS_PEUCKER_TOLERANCE = 5D;
   private static final int SRID_RDNEW = 28992;
+  // Snap coordinates to mm so reprojection stays deterministic across CPU architectures.
+  private static final double RD_NEW_PRECISION_SCALE = 1000D;
 
   private static final Logger LOG = LoggerFactory.getLogger(Natura2000WfsInterpreter.class);
 
@@ -82,7 +84,7 @@ public class Natura2000WfsInterpreter {
   // @formatter:on
 
   public Natura2000WfsInterpreter() {
-    this.rdNewGeometryFactory = new GeometryFactory(new PrecisionModel(), SRID_RDNEW);
+    this.rdNewGeometryFactory = new GeometryFactory(new PrecisionModel(RD_NEW_PRECISION_SCALE), SRID_RDNEW);
     this.wgsToRdNewtransform = createCRSTransform();
   }
 
@@ -231,7 +233,9 @@ public class Natura2000WfsInterpreter {
         final Coordinate coord = new Coordinate(Double.parseDouble(parts[i]), Double.parseDouble(parts[i + 1]));
 
         final Envelope env = extractEnvelope(coord, wgsToRdNewtransform);
-        coordinates[i / 2] = env.centre();
+        final Coordinate centre = env.centre();
+        rdNewGeometryFactory.getPrecisionModel().makePrecise(centre);
+        coordinates[i / 2] = centre;
       } catch (final NumberFormatException e) {
         LOG.info("Parsing: {} > {}", parts[i], parts[i + 1]);
       }
