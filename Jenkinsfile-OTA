@@ -1,6 +1,6 @@
 @Library('cicd-scripts')
 
-def PIPELINE_AGENT_LABEL    = 'Build-Medium'
+def PIPELINE_AGENT_LABEL    = 'ARM-Build-Medium'
 def DOCKER_MAVEN_IMAGE      = 'maven:3-eclipse-temurin-21'
 
 cicdPipeline(

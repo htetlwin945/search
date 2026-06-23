@@ -1,6 +1,6 @@
 @Library('cicd-scripts')
 
-def PIPELINE_AGENT_LABEL = 'PullRequestChecker'
+def PIPELINE_AGENT_LABEL = 'ARM-PullRequestChecker'
 def DOCKER_MAVEN_IMAGE   = 'maven:3-eclipse-temurin-21'
 
 cicdPipeline(agentLabel: PIPELINE_AGENT_LABEL) {
