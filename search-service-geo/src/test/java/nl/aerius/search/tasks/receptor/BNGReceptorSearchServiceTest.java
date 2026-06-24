@@ -43,13 +43,13 @@ class BNGReceptorSearchServiceTest {
 
     assertEquals(1, result.getSuggestions().size(), "Result number should be 1");
     final SearchSuggestion suggestion = result.getSuggestions().get(0);
-    assertEquals(SearchSuggestionType.RECEPTOR, suggestion.getType());
-    assertEquals("Receptor 123123 - x:644445 y:11307", suggestion.getDescription());
-    assertEquals("POINT(644445.465822343 11307.075536400083)", suggestion.getCentroid());
+    assertEquals(SearchSuggestionType.RECEPTOR, suggestion.getType(), "Suggestion type should be receptor");
+    assertEquals("Receptor 123123 - x:644445 y:11307", suggestion.getDescription(), "Description should match the receptor");
+    assertEquals("POINT(644445.465822343 11307.075536400083)", suggestion.getCentroid(), "Centroid should match the receptor location");
     assertEquals("POLYGON((644508.0 11415.0,644570.0 11307.0,644508.0 11200.0,644383.0 11200.0,644321.0 11307.0,644383.0 11415.0,644508.0 11415.0))",
-        suggestion.getGeometry());
-    assertNull(suggestion.getBbox());
-    assertEquals(100.0, suggestion.getScore());
+        suggestion.getGeometry(), "Geometry should be the receptor hexagon");
+    assertNull(suggestion.getBbox(), "Receptor suggestion should have no bbox");
+    assertEquals(100.0, suggestion.getScore(), "Receptor match should score 100");
   }
 
   @Test

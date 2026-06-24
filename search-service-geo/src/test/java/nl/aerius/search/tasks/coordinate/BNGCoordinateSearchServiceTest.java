@@ -45,7 +45,7 @@ class BNGCoordinateSearchServiceTest {
     assertEquals(1, result.getSuggestions().stream()
         .map(SearchSuggestion::getType)
         .filter(v -> v == SearchSuggestionType.COORDINATE)
-        .count(), "Expecting 1 receptor result.");
+        .count(), "Expecting 1 coordinate result.");
     assertEquals(1, result.getSuggestions().stream()
         .map(SearchSuggestion::getType)
         .filter(v -> v == SearchSuggestionType.RECEPTOR)
@@ -54,22 +54,22 @@ class BNGCoordinateSearchServiceTest {
     final SearchSuggestion coordinateSuggestion = result.getSuggestions().stream()
         .filter(v -> v.getType() == SearchSuggestionType.COORDINATE)
         .findFirst().orElseThrow();
-    assertEquals("x:123123 y:456456", coordinateSuggestion.getDescription());
-    assertEquals("POINT(123123 456456)", coordinateSuggestion.getCentroid());
-    assertNull(coordinateSuggestion.getGeometry());
-    assertNull(coordinateSuggestion.getBbox());
-    assertEquals(100.0, coordinateSuggestion.getScore());
+    assertEquals("x:123123 y:456456", coordinateSuggestion.getDescription(), "Coordinate description should match the query");
+    assertEquals("POINT(123123 456456)", coordinateSuggestion.getCentroid(), "Coordinate centroid should match the query");
+    assertNull(coordinateSuggestion.getGeometry(), "Coordinate suggestion should have no geometry");
+    assertNull(coordinateSuggestion.getBbox(), "Coordinate suggestion should have no bbox");
+    assertEquals(100.0, coordinateSuggestion.getScore(), "Coordinate match should score 100");
 
     final SearchSuggestion receptorSuggestion = result.getSuggestions().stream()
         .filter(v -> v.getType() == SearchSuggestionType.RECEPTOR)
         .findFirst().orElseThrow();
-    assertEquals("Receptor 7516977 - x:123121 y:456501", receptorSuggestion.getDescription());
-    assertEquals("POINT(123120.62375334681 456501.39829089347)", receptorSuggestion.getCentroid());
+    assertEquals("Receptor 7516977 - x:123121 y:456501", receptorSuggestion.getDescription(), "Receptor description should match the nearest receptor");
+    assertEquals("POINT(123120.62375334681 456501.39829089347)", receptorSuggestion.getCentroid(), "Receptor centroid should match the nearest receptor");
     assertEquals(
         "POLYGON((123183.0 456609.0,123245.0 456501.0,123183.0 456394.0,123059.0 456394.0,122997.0 456501.0,123059.0 456609.0,123183.0 456609.0))",
-        receptorSuggestion.getGeometry());
-    assertNull(receptorSuggestion.getBbox());
-    assertEquals(100.0, receptorSuggestion.getScore());
+        receptorSuggestion.getGeometry(), "Receptor geometry should be the receptor hexagon");
+    assertNull(receptorSuggestion.getBbox(), "Receptor suggestion should have no bbox");
+    assertEquals(100.0, receptorSuggestion.getScore(), "Receptor match should score 100");
   }
 
   @Test

@@ -17,7 +17,6 @@
 package nl.aerius.search.rest;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,8 +63,10 @@ public class SearchRestService {
   @RequestMapping(value = "/api/search-async", method = { RequestMethod.GET, RequestMethod.POST })
   public SearchResult retrieveSearchResultsAsync(final String query,
       @RequestParam(defaultValue = DEFAULT_CAPABILITIES) final List<String> capabilities,
-      @RequestParam(defaultValue = DEFAULT_REGION) final String region, final Optional<String> cancel) {
-    cancel.ifPresent(uuid -> taskDelegator.cancelSearchTask(uuid));
+      @RequestParam(defaultValue = DEFAULT_REGION) final String region, @RequestParam(required = false) final String cancel) {
+    if (cancel != null) {
+      taskDelegator.cancelSearchTask(cancel);
+    }
 
     return taskDelegator.retrieveSearchResultsAsync(scrub(query), TaskUtils.parseCapabilities(capabilities, region));
   }

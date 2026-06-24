@@ -39,7 +39,7 @@ public abstract class AbstractCoordinateSearchService implements SearchTaskServi
 
   // Regex used to identify a x:{x} y:{y} string
   private static final Pattern SEARCH_TERM_COORDINATE_REGEX = Pattern
-      .compile("(x:)?(\\d{1,6}\\.?\\d{1,6}?)\\s*[\\s,]\\s*(y:)?(\\d{1,6}\\.?\\d{1,6}?)", Pattern.CASE_INSENSITIVE);
+      .compile("(x:)?([0-9]{1,6}\\.?[0-9]{1,6})\\s*[\\s,]\\s*(y:)?([0-9]{1,6}\\.?[0-9]{1,6})", Pattern.CASE_INSENSITIVE);
 
   // The relevant groups in the above regular expression that identify the X and Y
   // coordinates respectively.

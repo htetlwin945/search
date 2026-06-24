@@ -104,7 +104,7 @@ public class MapSearchComponent implements IsVueComponent, HasCreated, HasMounte
       for (int i = 0; i < split.length; i++) {
         final String sample = split[i];
         if (sample.isEmpty()
-            || BOLD_CHARACTER.equals(sample.toLowerCase())) {
+            || BOLD_CHARACTER.equalsIgnoreCase(sample)) {
           continue;
         }
 

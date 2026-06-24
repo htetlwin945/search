@@ -19,7 +19,6 @@ package nl.aerius.search.controller;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,7 +33,11 @@ import nl.aerius.search.tasks.sync.BlockingSearchTaskDelegator;
  */
 @Controller
 public class SearchViewController {
-  @Autowired BlockingSearchTaskDelegator delegator;
+  private final BlockingSearchTaskDelegator delegator;
+
+  public SearchViewController(final BlockingSearchTaskDelegator delegator) {
+    this.delegator = delegator;
+  }
 
   @GetMapping(value = { "/" })
   public String searchForm(final Model model) {

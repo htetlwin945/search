@@ -93,7 +93,7 @@ public class CacheMap<K, V> extends HashMap<K, V> {
     this.timeToLive = timeToLive;
     this.logger = logger;
 
-    scheduler.scheduleAtFixedRate(() -> doSweep(), interval, interval, TimeUnit.SECONDS);
+    scheduler.scheduleAtFixedRate(this::doSweep, interval, interval, TimeUnit.SECONDS);
   }
 
   @Override

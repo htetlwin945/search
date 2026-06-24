@@ -20,10 +20,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +47,9 @@ import kong.unirest.core.json.JSONObject;
 @Component
 @ImplementsCapability(value = SearchCapability.BASIC_INFO, region = SearchRegion.UK)
 public class BingSearchService implements SearchTaskService {
+  private static final int HTTP_STATUS_OK = 200;
+  private static final int HTTP_STATUS_TOO_MANY_REQUESTS = 429;
+
   private static final String REGION = "GB";
   private static final String CULTURE = "en-GB";
   private static final String BNG_BOUNDS = "49.79,-8.82,60.94,1.92";
@@ -102,15 +103,15 @@ public class BingSearchService implements SearchTaskService {
         .getJSONArray("value");
     // As the list of suggestions can contain duplicates when we translate them to actual locations, filter those out by using a set
     // Use a LinkedHashSet to keep the order.
-    final Set<SuggestedLocation> suggestedLocations = new LinkedHashSet<>();
+    final Set<BingSuggestedLocation> suggestedLocations = new LinkedHashSet<>();
     for (int i = 0; i < arr.length(); i++) {
       final JSONObject jsonObject = arr.getJSONObject(i);
-      final SuggestedLocation suggestedLocation = createSuggestedLocation(jsonObject);
+      final BingSuggestedLocation suggestedLocation = createSuggestedLocation(jsonObject);
       suggestedLocations.add(suggestedLocation);
     }
     // Now convert the suggestions by Bing to actual locations, to obtain geo information.
     int i = 0;
-    for (final SuggestedLocation suggestedLocation : suggestedLocations) {
+    for (final BingSuggestedLocation suggestedLocation : suggestedLocations) {
       final JSONObject jsonObject = obtainLocation(suggestedLocation);
       if (jsonObject != null) {
         final SearchSuggestion sug = createSuggestion(query, i, jsonObject);
@@ -122,14 +123,13 @@ public class BingSearchService implements SearchTaskService {
 
   private JSONArray obtainResources(final String url) {
     JSONObject body = null;
-    int retry = 0;
-    while (retry++ < maxRetries) {
+    for (int retry = 1; retry <= maxRetries; retry++) {
       final HttpResponse<JsonNode> json = Unirest.get(url).asJson();
       body = json.getBody().getObject();
       final int statusCode = body.getInt("statusCode");
-      if (statusCode == 200) {
+      if (statusCode == HTTP_STATUS_OK) {
         return body.getJSONArray("resourceSets").getJSONObject(0).getJSONArray("resources");
-      } else if (statusCode == 429) {
+      } else if (statusCode == HTTP_STATUS_TOO_MANY_REQUESTS) {
         LOG.info("Got too many retries status code from Bing, attempt {}.", retry);
         try {
           TimeUnit.SECONDS.sleep(1);
@@ -143,21 +143,21 @@ public class BingSearchService implements SearchTaskService {
     throw new BingServiceException("Retries failed, last returned: " + body);
   }
 
-  private SuggestedLocation createSuggestedLocation(final JSONObject jsonObject) {
+  private static BingSuggestedLocation createSuggestedLocation(final JSONObject jsonObject) {
     final JSONObject addressObject = jsonObject.getJSONObject("address");
-    return new SuggestedLocation(jsonObject.optString("name"),
+    return new BingSuggestedLocation(jsonObject.optString("name"),
         addressObject.optString("locality"),
         addressObject.optString("adminDistrict2"),
         addressObject.optString("addressLine"),
         addressObject.optString("formattedAddress"));
   }
 
-  private JSONObject obtainLocation(final SuggestedLocation location) {
+  private JSONObject obtainLocation(final BingSuggestedLocation location) {
     final String url;
-    if (location.name != null && !location.name.isEmpty()) {
-      url = String.format(BING_LOCATIONS_ENDPOINT, apiKey, "&query=" + location.name);
+    if (location.name() != null && !location.name().isEmpty()) {
+      url = String.format(BING_LOCATIONS_ENDPOINT, apiKey, "&query=" + location.name());
     } else {
-      url = String.format(BING_LOCATIONS_ENDPOINT, apiKey, location.toAddressUrlParameters());
+      url = String.format(BING_LOCATIONS_ENDPOINT, apiKey, location.toAddressUrlParameters(REGION));
     }
     final JSONArray arr = obtainResources(url);
     return arr.length() == 0 ? null : arr.getJSONObject(0);
@@ -219,63 +219,5 @@ public class BingSearchService implements SearchTaskService {
     }
 
     return suggestionType;
-  }
-
-  private static class SuggestedLocation {
-
-    private final String name;
-    private final String locality;
-    private final String adminDistrict;
-    private final String addressLine;
-    private final String formattedAddress;
-
-    SuggestedLocation(final String name, final String locality, final String adminDistrict, final String addressLine, final String formattedAddress) {
-      this.name = name;
-      this.locality = locality;
-      this.adminDistrict = adminDistrict;
-      this.addressLine = addressLine;
-      this.formattedAddress = formattedAddress;
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(addressLine, adminDistrict, formattedAddress, locality, name);
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-      if (this == obj)
-        return true;
-      if (obj == null)
-        return false;
-      if (getClass() != obj.getClass())
-        return false;
-      final SuggestedLocation other = (SuggestedLocation) obj;
-      return Objects.equals(addressLine, other.addressLine) && Objects.equals(adminDistrict, other.adminDistrict)
-          && Objects.equals(formattedAddress, other.formattedAddress) && Objects.equals(locality, other.locality)
-          && Objects.equals(name, other.name);
-    }
-
-    String toAddressUrlParameters() {
-      final Map<String, String> parameters = new HashMap<>();
-      parameters.put("countryRegion", REGION);
-      if (locality != null) {
-        parameters.put("locality", locality);
-      }
-      if (adminDistrict != null) {
-        parameters.put("adminDistrict", adminDistrict);
-      }
-      if (addressLine != null) {
-        parameters.put("addressLine", addressLine);
-      }
-      if (formattedAddress != null) {
-        parameters.put("query", formattedAddress);
-      }
-      return parameters.isEmpty()
-          ? ""
-          : "&" + parameters.entrySet().stream()
-              .map(e -> e.getKey() + "=" + e.getValue())
-              .collect(Collectors.joining("&"));
-    }
   }
 }
